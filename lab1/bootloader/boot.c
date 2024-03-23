@@ -4,7 +4,10 @@
 
 void bootMain(void) {
 	//TODO
-
+	void (*elf)(void);
+	elf = (void(*)(void))0x8c00;
+	readSect((void *)0x8c00,1);
+	elf();
 }
 
 
