@@ -4,10 +4,9 @@
 
 void bootMain(void) {
 	//TODO
-	void (*elf)(void);
-	elf = (void(*)(void))0x8c00;
-	readSect((void *)0x8c00,1);
-	elf();
+	void (*memory)(void) = (void(*)(void))0x8c00;     //makefile中的地址是0x8c00
+	readSect((void *)0x8c00,1);		 //读取一个磁盘的数据到内存0x8c00处
+	memory();							 //调用内存0x8c00,从这里执行
 }
 
 

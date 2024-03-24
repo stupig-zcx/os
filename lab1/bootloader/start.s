@@ -12,10 +12,9 @@ start:
 	movw $0x7d00, %ax
 	movw %ax, %sp # setting stack pointer to 0x7d00
 	# TODO:通过中断输出Hello World
-	pushw $13
-	pushw $message  
-	#实模式下地址16位
-	call displayer
+	pushw $13		#长度是13
+	pushw $message  #实模式下地址16位
+	call displayStr
 
 loop:
 	jmp loop
@@ -23,14 +22,14 @@ loop:
 message:
 	.string "Hello, World!\n\0"
 
-displayer:
-	pushw %bp
+displayStr:                  #采用ah=13的中断，显示字符串
+	pushw %bp               #调用函数储存返回的栈基址
 	movw 4(%esp), %ax
-	movw %ax, %bp
-	movw 6(%esp), %cx
-	movw $0x1301, %ax
-	movw $0x0007, %bx
-	movw $0x0000, %dx
+	movw %ax, %bp           #bp存串地址
+	movw 6(%esp), %cx       #cx存串长度
+	movw $0x1301, %ax   	#ah=13 al=01表示属性
+	movw $0x0007, %bx		#bh起始页为0 bl=07属性
+	movw $0x0000, %dx		#dh dx 起始行列 都为0
 	int $0x10
 	popw %bp
 	ret
@@ -49,7 +48,7 @@ start:
 	movw %ax, %es
 	movw %ax, %ss
 	# TODO:关闭中断
-	cli
+	cli				#cli为关闭中断指令
 
 
 	# 启动A20总线
@@ -61,8 +60,8 @@ start:
 	data32 addr32 lgdt gdtDesc # loading gdtr, data32, addr32
 
 	# TODO：设置CR0的PE位（第0位）为1
-	movl %cr0, %eax
-	orl $1,%eax 
+	movl %cr0, %eax     #CR0末尾为PE位
+	orl $1, %eax 		
 	movl %eax, %cr0
 
 
@@ -83,22 +82,22 @@ start32:
 	movl %eax, %esp
 	# TODO:输出Hello World
 	movl $message,%esi             
-	movl $0xb8000,%edi           #写到显存地址就能输出
+	movl $0xb8000,%ebx          #写到显存地址就能输出
 
-print_loop:
+print_per:						#一个字节一个字节输出
 	movb (%esi),%al
 	add $1,%esi
-	orb %al,%al
+	andb %al,%al				#如果是0说明没有字节全部输出完毕
 	jz loop32
-	movb %al,(%edi)
-	add $2,%edi                 #显存中两个字节表示一个输出字节，有一个字节高位对应字符属性      
-	jmp print_loop                  
+	movb %al,(%ebx)				#移到显存地址
+	add $2,%ebx                 #显存中两个字节表示一个输出字节，有一个字节高位对应字符属性      
+	jmp print_per                  
 
 loop32:
 	jmp loop32
 
 message:
-	.string "Hello, Worlf!\n\0"
+	.string "Hello, World!\n\0"
 
 
 
